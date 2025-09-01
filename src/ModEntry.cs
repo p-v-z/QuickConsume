@@ -116,9 +116,9 @@ namespace QuickConsume
 			if (!Config.AllowWhenFull && who.Stamina >= who.MaxStamina && who.health >= who.maxHealth)
 				return;
 
-			// Calculate energy/health gains (used for both buff and non-buff foods)
-			int staminaGain = obj.Edibility > 0 ? obj.Edibility * 2 : 0; // vanilla rule of thumb
-			int healthGain = obj.Edibility > 0 ? (int)System.Math.Round(obj.Edibility * 0.4) : 0;
+			// Calculate energy/health gains using correct Stardew Valley formula
+			int staminaGain = obj.Edibility > 0 ? (int)System.Math.Round(obj.Edibility * 2.5) : 0;
+			int healthGain = obj.Edibility > 0 ? (int)System.Math.Round(obj.Edibility * 0.5) : 0;
 
 			// Check if this food has buffs - if so, don't allow quick consumption
 			if (HasBuffs(obj))
@@ -138,28 +138,44 @@ namespace QuickConsume
 
 			// Apply instant eating effects for non-buff foods
 
+			// Store current values to measure actual restoration
+			int previousStamina = (int)who.Stamina;
+			int previousHealth = who.health;
+
 			// Apply energy/health
 			who.Stamina = System.Math.Min(who.MaxStamina, who.Stamina + staminaGain);
 			who.health = System.Math.Min(who.maxHealth, who.health + healthGain);
+
+			// Calculate actual restoration amounts
+			int actualStaminaGain = (int)who.Stamina - previousStamina;
+			int actualHealthGain = who.health - previousHealth;
 
 			// Play eat sfx (no animation)
 			if (Config.PlayEatSound)
 				Game1.playSound("eat");
 
-			// Show health/energy gain as floating text (optional)
-			if (Config.ShowHealthGain && (staminaGain > 0 || healthGain > 0))
+			// Show "Quickly consumed" message with consumable icon
+			var consumedMessage = new HUDMessage(null)
 			{
-				string gainText = "";
-				if (healthGain > 0) gainText += $"+{healthGain} Health ";
-				if (staminaGain > 0) gainText += $"+{staminaGain} Energy";
+				message = $"Quickly consumed {obj.DisplayName}",
+				timeLeft = HUDMessage.defaultTime,
+				messageSubject = obj
+			};
+			Game1.addHUDMessage(consumedMessage);
 
-				var hudMessage = new HUDMessage(null)
+			// Show health/energy gain as separate messages like the game does (optional)
+			if (Config.ShowHealthGain)
+			{
+				if (actualHealthGain > 0)
 				{
-					message = gainText.Trim(),
-					timeLeft = HUDMessage.defaultTime,
-					messageSubject = obj
-				};
-				Game1.addHUDMessage(hudMessage);
+					var healthMessage = new HUDMessage($"+{actualHealthGain} Health", 5);
+					Game1.addHUDMessage(healthMessage);
+				}
+				if (actualStaminaGain > 0)
+				{
+					var energyMessage = new HUDMessage($"+{actualStaminaGain} Energy", 4);
+					Game1.addHUDMessage(energyMessage);
+				}
 			}
 
 			// Consume one from the stack
