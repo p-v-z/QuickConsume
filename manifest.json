@@ -1,0 +1,9 @@
+{
+  "Name": "Quick Consume",
+  "Author": "StyGGz",
+  "Version": "1.0.0",
+  "Description": "Instantly consumes regular food items: no confirm dialog, no animation. Buffed foods use normal consumption to preserve buffs.",
+  "UniqueID": "StyGGz.QuickConsume",
+  "EntryDll": "QuickConsume.dll",
+  "MinimumApiVersion": "4.0.0"
+}
