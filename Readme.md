@@ -1,6 +1,8 @@
 # Quick Consume 🍎
 
-A Stardew Valley mod that allows you to instantly consume regular edible items without the confirmation dialog or eating animation. Buffed consumables use normal game consumption to preserve their buff effects.
+A **Stardew Valley** mod that allows you to instantly consume regular edible items without the confirmation dialog or eating animation.
+
+> **Note**: Buffed consumables automatically use normal game consumption to preserve their buff effects.
 
 ## Features
 
@@ -69,33 +71,31 @@ Edit `config.json` in the mod folder:
 
 - **Buffed consumables**: Items that provide temporary stat bonuses
 - **Examples**: Coffee (+Speed), Lucky Lunch (+Luck), Spicy Eel (+Luck +Speed), Pumpkin Soup (+Defense +Luck)
-- **Reason**: These items use normal game consumption to ensure buffs are properly applied without conflicts
+- **Reason**: These items require the game's normal consumption process to properly apply their complex buff effects, duration timers, and stacking rules. Instant consumption would bypass this system and could cause buffs to malfunction or not apply at all.
 
 ## Technical Details
 
 ### Requirements
 
-- **SMAPI 4.0.0+**
-- **Stardew Valley 1.5+**
-- **.NET 6.0** (included with game)
+- **[SMAPI 4.0.0+](https://smapi.io/)** - Stardew Valley modding framework
+- **[Stardew Valley 1.5+](https://store.steampowered.com/app/413150/Stardew_Valley/)** - Base game
+- **[.NET 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)** (included with game)
 
 ### Optional Dependencies
 
-- **Generic Mod Config Menu** - For in-game configuration
+- **[Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098)** - For in-game configuration
 
 ### Compatibility
 
-- ✅ **Multiplayer compatible** - Works for all players who have the mod installed
 - ✅ **Save-safe** - Can be added/removed without affecting save files
-- ✅ **Cross-platform** - Windows, Mac, Linux
+- ⚠️ **Cross-platform** - Windows, Mac, Linux (built with cross-platform code, but primarily tested on Windows)
+- ❓ **Multiplayer** - Not extensively tested in multiplayer. Each player needs the mod installed. May work but could cause desyncs.
 
 ## Development
 
 ### Building from Source
 
 ```bash
-git clone https://github.com/yourusername/QuickConsume.git
-cd QuickConsume
 dotnet build
 ```
 
@@ -107,22 +107,9 @@ dotnet build
 4. Test thoroughly
 5. Submit a pull request
 
-## Changelog
-
-### Version 1.0.0
-
-- Initial release
-- Instant consumption for regular (non-buffed) consumables
-- Energy/health gain messages
-- Generic Mod Config Menu integration
-- Configurable modifier key support
-- Sound effects and visual feedback
-- Smart buff detection prevents conflicts with buffed consumables
-
 ## Support
 
-- **Report bugs** - Use the [GitHub Issues](https://github.com/yourusername/QuickConsume/issues) page
-- **Get help** - Ask questions in the [Stardew Valley Discord](https://discord.gg/StardewValley)
+- **Report bugs** - Use the [GitHub Issues](https://github.com/p-v-z/QuickConsume/issues) page
 - **Suggest features** - Open a feature request on GitHub
 
 ## License
@@ -138,4 +125,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-Thanks to the Stardew Valley modding community for their excellent documentation and helpful tools that made this mod possible.
+Thanks to ConcernedApe for creating Stardew Valley and allowing people to mod it. Thanks also to the Stardew Valley modding community for their excellent documentation and helpful tools that made this mod possible.

@@ -22,7 +22,6 @@ namespace QuickConsume
 				Config = helper.ReadConfig<ModConfig>();
 				helper.Events.Input.ButtonPressed += OnButtonPressed;
 				helper.Events.GameLoop.GameLaunched += OnGameLaunched;
-				Monitor.Log("Quick Consume mod loaded successfully!", LogLevel.Info);
 			}
 			catch (Exception ex)
 			{
@@ -32,37 +31,23 @@ namespace QuickConsume
 
 		private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 		{
-			Monitor.Log("OnGameLaunched event fired - looking for Generic Mod Config Menu...", LogLevel.Debug);
-
 			// Get Generic Mod Config Menu's API (if it's installed)
 			var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
 
 			// Try alternative UniqueID if the first one doesn't work
-			if (configMenu is null)
-			{
-				configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("GenericModConfigMenu");
-			}
-
+			configMenu ??= Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("GenericModConfigMenu");
 			if (configMenu is null)
 			{
 				Monitor.Log("Generic Mod Config Menu not found. Make sure it's installed for in-game configuration.", LogLevel.Info);
-				// List all loaded mods for debugging
-				Monitor.Log("Loaded mods:", LogLevel.Debug);
-				foreach (var mod in Helper.ModRegistry.GetAll())
-				{
-					Monitor.Log($"  - {mod.Manifest.UniqueID} ({mod.Manifest.Name})", LogLevel.Debug);
-				}
 				return;
 			}
 
-			Monitor.Log("Found Generic Mod Config Menu! Setting up configuration options...", LogLevel.Debug);          // Register mod
+			// Register mod
 			configMenu.Register(
 				mod: ModManifest,
 				reset: () => Config = new ModConfig(),
 				save: () => Helper.WriteConfig(Config)
 			);
-
-			Monitor.Log("Mod registered with GMCM successfully.", LogLevel.Debug);
 
 			// Add mod configuration options
 			configMenu.AddBoolOption(
@@ -104,8 +89,6 @@ namespace QuickConsume
 				getValue: () => Config.ShowHealthGain,
 				setValue: value => Config.ShowHealthGain = value
 			);
-
-			Monitor.Log("All GMCM configuration options added successfully!", LogLevel.Debug);
 		}
 
 		private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
@@ -134,8 +117,8 @@ namespace QuickConsume
 				return;
 
 			// Calculate energy/health gains (used for both buff and non-buff foods)
-			int staminaGain = obj.staminaRecoveredOnConsumption();
-			int healthGain = obj.healthRecoveredOnConsumption();
+			int staminaGain = obj.Edibility > 0 ? obj.Edibility * 2 : 0; // vanilla rule of thumb
+			int healthGain = obj.Edibility > 0 ? (int)System.Math.Round(obj.Edibility * 0.4) : 0;
 
 			// Check if this food has buffs - if so, don't allow quick consumption
 			if (HasBuffs(obj))
@@ -206,37 +189,6 @@ namespace QuickConsume
 		public bool AllowWhenFull { get; set; } = true;          // allow eating even when full
 		public bool PlayEatSound { get; set; } = true;           // play the eating sound effect
 		public bool ShowHealthGain { get; set; } = true;         // show floating text for health/energy gained
-	}
-
-	// Extension methods that work across versions
-	internal static class EatHelpers
-	{
-		public static int staminaRecoveredOnConsumption(this SObject o)
-			=> o.Edibility > 0 ? o.Edibility * 2 : 0; // vanilla rule of thumb
-
-		public static int healthRecoveredOnConsumption(this SObject o)
-			=> o.Edibility > 0 ? (int)System.Math.Round(o.Edibility * 0.4) : 0;
-
-		public static void performEatEffects(this SObject o, Farmer who)
-		{
-			// This method is kept for compatibility but simplified
-			// We now only allow quick consumption of non-buffed foods
-			try
-			{
-				if (o.Edibility > 0)
-				{
-					// If this food has buffs, we don't allow quick consumption
-					if (BuffData.HasBuffs(o.Name))
-					{
-						return;
-					}
-				}
-			}
-			catch
-			{
-				// Silent error handling - just don't process if something goes wrong
-			}
-		}
 	}
 
 	/// <summary>The API interface for Generic Mod Config Menu.</summary>
