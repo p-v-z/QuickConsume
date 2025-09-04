@@ -36,7 +36,7 @@ Edit `config.json` in the mod folder:
 ```json
 {
   "RequireModifier": false,
-  "ModifierKey": "LeftShift",
+  "ModifierKey": "LeftControl",
   "AllowWhenFull": true,
   "PlayEatSound": true,
   "ShowHealthGain": true
@@ -45,13 +45,13 @@ Edit `config.json` in the mod folder:
 
 ### Configuration Options
 
-| Setting           | Description                                 | Default     |
-| ----------------- | ------------------------------------------- | ----------- |
-| `RequireModifier` | Must hold modifier key to quick-consume     | `false`     |
-| `ModifierKey`     | Key to hold when RequireModifier is true    | `LeftShift` |
-| `AllowWhenFull`   | Allow consuming when health/energy are full | `true`      |
-| `PlayEatSound`    | Play eating sound effect                    | `true`      |
-| `ShowHealthGain`  | Show "+X Energy +Y Health" messages         | `true`      |
+| Setting           | Description                                 | Default       |
+| ----------------- | ------------------------------------------- | ------------- |
+| `RequireModifier` | Must hold modifier key to quick-consume     | `false`       |
+| `ModifierKey`     | Key to hold when RequireModifier is true    | `LeftControl` |
+| `AllowWhenFull`   | Allow consuming when health/energy are full | `true`        |
+| `PlayEatSound`    | Play eating sound effect                    | `true`        |
+| `ShowHealthGain`  | Show "+X Energy +Y Health" messages         | `true`        |
 
 ## Usage
 
@@ -119,10 +119,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Credits
 
 - **Author**: StyGGz
-- **Framework**: [SMAPI](https://smapi.io/) by Pathoschild
-- **Build Config**: [ModBuildConfig](https://github.com/Pathoschild/Stardew.ModBuildConfig) by Pathoschild
-- **Config Menu**: [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) by spacechase0
+- **Framework**: [SMAPI](https://smapi.io/) by [Pathoschild](https://github.com/Pathoschild)
+- **Build Config**: [ModBuildConfig](https://github.com/Pathoschild/Stardew.ModBuildConfig) by [Pathoschild](https://github.com/Pathoschild)
+- **Config Menu**: [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) by [spacechase0](https://github.com/spacechase0)
 
 ## Acknowledgments
 
-Thanks to ConcernedApe for creating Stardew Valley and allowing people to mod it. Thanks also to the Stardew Valley modding community for their excellent documentation and helpful tools that made this mod possible.
+Thanks to [ConcernedApe](https://twitter.com/ConcernedApe) for creating Stardew Valley and providing an excellent modding framework. Special thanks to the active modding community for maintaining documentation and development tools.

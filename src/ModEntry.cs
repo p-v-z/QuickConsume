@@ -14,12 +14,23 @@ namespace QuickConsume
 	public class ModEntry : Mod
 	{
 		private ModConfig Config = new();
+		private ConfigMenuManager? configMenuManager;
 
 		public override void Entry(IModHelper helper)
 		{
 			try
 			{
 				Config = helper.ReadConfig<ModConfig>();
+
+				// Initialize configuration menu manager
+				configMenuManager = new ConfigMenuManager(
+					helper,
+					ModManifest,
+					Monitor,
+					() => Config,
+					config => Config = config
+				);
+
 				helper.Events.Input.ButtonPressed += OnButtonPressed;
 				helper.Events.GameLoop.GameLaunched += OnGameLaunched;
 			}
@@ -31,64 +42,7 @@ namespace QuickConsume
 
 		private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 		{
-			// Get Generic Mod Config Menu's API (if it's installed)
-			var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-
-			// Try alternative UniqueID if the first one doesn't work
-			configMenu ??= Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("GenericModConfigMenu");
-			if (configMenu is null)
-			{
-				Monitor.Log("Generic Mod Config Menu not found. Make sure it's installed for in-game configuration.", LogLevel.Info);
-				return;
-			}
-
-			// Register mod
-			configMenu.Register(
-				mod: ModManifest,
-				reset: () => Config = new ModConfig(),
-				save: () => Helper.WriteConfig(Config)
-			);
-
-			// Add mod configuration options
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => "Require Modifier Key",
-				tooltip: () => "If enabled, you must hold the modifier key while right-clicking to instantly eat food.",
-				getValue: () => Config.RequireModifier,
-				setValue: value => Config.RequireModifier = value
-			);
-
-			configMenu.AddKeybind(
-				mod: ModManifest,
-				name: () => "Modifier Key",
-				tooltip: () => "The key to hold when 'Require Modifier Key' is enabled.",
-				getValue: () => Config.ModifierKey,
-				setValue: value => Config.ModifierKey = value
-			);
-
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => "Allow When Full",
-				tooltip: () => "If enabled, you can eat food even when your health and energy are already full.",
-				getValue: () => Config.AllowWhenFull,
-				setValue: value => Config.AllowWhenFull = value
-			);
-
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => "Play Eat Sound",
-				tooltip: () => "If enabled, plays the eating sound effect when instantly consuming food.",
-				getValue: () => Config.PlayEatSound,
-				setValue: value => Config.PlayEatSound = value
-			);
-
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => "Show Health/Energy Gain",
-				tooltip: () => "If enabled, shows floating text indicating how much health and energy you gained.",
-				getValue: () => Config.ShowHealthGain,
-				setValue: value => Config.ShowHealthGain = value
-			);
+			configMenuManager?.SetupConfigMenu();
 		}
 
 		private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
@@ -116,9 +70,9 @@ namespace QuickConsume
 			if (!Config.AllowWhenFull && who.Stamina >= who.MaxStamina && who.health >= who.maxHealth)
 				return;
 
-			// Calculate energy/health gains using correct Stardew Valley formula
-			int staminaGain = obj.Edibility > 0 ? (int)System.Math.Round(obj.Edibility * 2.5) : 0;
-			int healthGain = obj.Edibility > 0 ? (int)System.Math.Round(obj.Edibility * 0.5) : 0;
+			// Calculate energy/health gains using the game's own methods
+			int staminaGain = obj.staminaRecoveredOnConsumption();
+			int healthGain = obj.healthRecoveredOnConsumption();
 
 			// Check if this food has buffs - if so, don't allow quick consumption
 			if (HasBuffs(obj))
@@ -138,15 +92,15 @@ namespace QuickConsume
 
 			// Apply instant eating effects for non-buff foods
 
-			// Store current values to measure actual restoration
+			// Store current values to calculate actual restoration for display
 			int previousStamina = (int)who.Stamina;
 			int previousHealth = who.health;
 
-			// Apply energy/health
+			// Apply energy/health restoration
 			who.Stamina = System.Math.Min(who.MaxStamina, who.Stamina + staminaGain);
 			who.health = System.Math.Min(who.maxHealth, who.health + healthGain);
 
-			// Calculate actual restoration amounts
+			// Calculate actual restoration amounts for display
 			int actualStaminaGain = (int)who.Stamina - previousStamina;
 			int actualHealthGain = who.health - previousHealth;
 
@@ -154,14 +108,17 @@ namespace QuickConsume
 			if (Config.PlayEatSound)
 				Game1.playSound("eat");
 
-			// Show "Quickly consumed" message with consumable icon
-			var consumedMessage = new HUDMessage(null)
+			// Show "Quickly consumed" message with consumable icon (optional)
+			if (Config.ShowQuickConsumeDialog)
 			{
-				message = $"Quickly consumed {obj.DisplayName}",
-				timeLeft = HUDMessage.defaultTime,
-				messageSubject = obj
-			};
-			Game1.addHUDMessage(consumedMessage);
+				var consumedMessage = new HUDMessage(null)
+				{
+					message = $"Quickly consumed {obj.DisplayName}",
+					timeLeft = HUDMessage.defaultTime,
+					messageSubject = obj
+				};
+				Game1.addHUDMessage(consumedMessage);
+			}
 
 			// Show health/energy gain as separate messages like the game does (optional)
 			if (Config.ShowHealthGain)
@@ -193,25 +150,46 @@ namespace QuickConsume
 
 		private bool HasBuffs(SObject obj)
 		{
-			// Use our comprehensive buff data system
-			return BuffData.HasBuffs(obj.Name);
+			try
+			{
+				// Primary method: Check the object's buff data
+				if (Game1.objectData.TryGetValue(obj.ItemId, out var objectData))
+				{
+					// If the item has any buff definitions, it has buffs
+					if (objectData.Buffs != null && objectData.Buffs.Count > 0)
+					{
+						// Simply check if any buff entries exist - they wouldn't be there unless they do something
+						return true;
+					}
+				}
+
+				// If we reach here, the item has no buff data in the game's native system
+				// This likely means it's safe for quick consumption
+
+				// Check if the item's category or type suggests it might have buffs
+				// Most buff foods are in the "Cooking" category (-7) or specific artisan goods
+				if (obj.Category == SObject.CookingCategory)
+				{
+					// Cooked foods might have buffs but we couldn't detect them through the normal system
+					// This could be a vanilla item we missed or a modded item with custom buff logic
+					Monitor.Log($"Cooked food '{obj.Name}' has no detectable buff data - using normal consumption for safety", LogLevel.Warn);
+					return true;
+				}
+
+				// For all other categories (fruits, vegetables, foraged items, etc.)
+				// these are usually safe for quick consumption
+				Monitor.Log($"Food '{obj.Name}' appears safe for quick consumption (no buffs detected)", LogLevel.Trace);
+				return false;
+			}
+			catch (Exception ex)
+			{
+				Monitor.Log($"Error checking buffs for {obj.Name}: {ex.Message}", LogLevel.Warn);
+
+				// If we can't determine buff status, err on the side of caution
+				// and use normal consumption to avoid breaking buff mechanics
+				return true;
+			}
 		}
 	}
 
-	public class ModConfig
-	{
-		public bool RequireModifier { get; set; } = false;      // set true if you want to hold a key to instant-eat
-		public SButton ModifierKey { get; set; } = SButton.LeftShift;
-		public bool AllowWhenFull { get; set; } = true;          // allow eating even when full
-		public bool PlayEatSound { get; set; } = true;           // play the eating sound effect
-		public bool ShowHealthGain { get; set; } = true;         // show floating text for health/energy gained
-	}
-
-	/// <summary>The API interface for Generic Mod Config Menu.</summary>
-	public interface IGenericModConfigMenuApi
-	{
-		void Register(IManifest mod, Action reset, Action save, bool titleScreenOnly = false);
-		void AddBoolOption(IManifest mod, Func<bool> getValue, Action<bool> setValue, Func<string> name, Func<string>? tooltip = null, string? fieldId = null);
-		void AddKeybind(IManifest mod, Func<SButton> getValue, Action<SButton> setValue, Func<string> name, Func<string>? tooltip = null, string? fieldId = null);
-	}
 }

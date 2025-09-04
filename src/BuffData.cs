@@ -4,7 +4,11 @@ namespace QuickConsume
 {
 	/// <summary>
 	/// Comprehensive buff data extracted from the Stardew Valley wiki cooking page.
-	/// This allows us to apply buffs manually when the game's native buff system is inadequate.
+	/// This provides detailed buff information for display purposes and documentation.
+	/// 
+	/// Note: The mod now uses the game's native objectData.Buffs system for buff detection,
+	/// which automatically works with modded items. This class is kept for reference
+	/// and potential future features that need detailed buff information.
 	/// </summary>
 	public static class BuffData
 	{
@@ -95,8 +99,13 @@ namespace QuickConsume
 		};
 
 		/// <summary>
-		/// Check if a food has any buffs
+		/// Check if a food has any buffs.
+		/// 
+		/// NOTE: This method is kept for reference but is no longer used for primary buff detection.
+		/// The mod now uses the game's native buff detection system which works with all items including mods.
 		/// </summary>
+		/// <param name="foodName">The display name of the food item</param>
+		/// <returns>True if the food is known to provide buffs in our reference data</returns>
 		public static bool HasBuffs(string foodName)
 		{
 			return FoodBuffs.ContainsKey(foodName);
@@ -138,6 +147,8 @@ namespace QuickConsume
 		/// <summary>
 		/// Get a human-readable description of the buffs a food provides
 		/// </summary>
+		/// <param name="foodName">The display name of the food item</param>
+		/// <returns>A formatted string describing the buffs, or "No buffs" if none found</returns>
 		public static string GetBuffDescription(string foodName)
 		{
 			if (!FoodBuffs.TryGetValue(foodName, out var info))
