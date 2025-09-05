@@ -6,11 +6,11 @@ QuickConsume is a **Stardew Valley mod** built with C# .NET 6.0 and SMAPI framew
 
 ## Core Functionality
 
-- **Instant consumption** - Right-click non-buffed edible items for immediate consumption
-- **Buff preservation** - Automatically detects buffed consumables and uses normal game consumption
+- **Instant consumption** - Right-click any edible item for immediate consumption
+- **Native buff support** - Uses game's `GetFoodOrDrinkBuffs()` method for perfect buff compatibility
 - **Configuration system** - In-game config menu support via Generic Mod Config Menu
 - **Visual feedback** - Energy/health gain messages and optional sound effects
-- **Smart item detection** - Distinguishes between regular and buffed consumables
+- **Universal compatibility** - Works with all vanilla and modded consumables
 
 ## Code Style Guidelines
 
@@ -34,7 +34,9 @@ QuickConsume is a **Stardew Valley mod** built with C# .NET 6.0 and SMAPI framew
 ## Project Structure
 
 - `src/ModEntry.cs` - Main SMAPI mod entry point and event handlers
-- `src/BuffData.cs` - Buff detection and consumable categorization logic
+- `src/ConfigMenuManager.cs` - Configuration menu integration with Generic Mod Config Menu
+- `src/ModConfig.cs` - Configuration data structure and settings
+- `src/IGenericModConfigMenuApi.cs` - Interface for Generic Mod Config Menu API
 - `manifest.json` - SMAPI mod manifest with dependencies and metadata
 - `config.json` - User configuration file (auto-generated)
 - `Readme.md` - Comprehensive documentation and usage guide
@@ -50,7 +52,7 @@ QuickConsume is a **Stardew Valley mod** built with C# .NET 6.0 and SMAPI framew
 ## Key Technical Considerations
 
 - **Item edibility validation** - Check item.Edibility > 0 for consumable detection
-- **Buff detection** - Identify items with temporary stat bonuses or special effects
+- **Native buff application** - Use `GetFoodOrDrinkBuffs()` and `Farmer.applyBuff()` for proper buff handling
 - **Input handling** - Right-click detection with optional modifier key support
 - **Game state checks** - Validate player can consume (not full health/energy if configured)
 - **SMAPI events** - Use appropriate event handlers for input and game state changes

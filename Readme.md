@@ -1,16 +1,14 @@
 # Quick Consume 🍎
 
-A **Stardew Valley** mod that allows you to instantly consume regular edible items without the confirmation dialog or eating animation.
-
-> **Note**: Buffed consumables automatically use normal game consumption to preserve their buff effects.
+A **Stardew Valley** mod that allows you to instantly consume edible items without the confirmation dialog or eating animation.
 
 ## Features
 
-- **Instant consumption** - Right-click any non-buffed edible item to consume it immediately
-- **No confirmation dialog** - Skip the "Do you want to eat this?" prompt for regular consumables
+- **Instant consumption** - Right-click any edible item to consume it immediately
+- **No confirmation dialog** - Skip the "Do you want to eat this?" prompt for all consumables
+- **Full compatibility** - Works with all foods including buffed items (preserves all effects)
 - **Energy and health messages** - See floating text showing how much you gained
 - **Sound effects** - Optional eating sound when consuming items
-- **Smart buff detection** - Buffed consumables show a message and use normal consumption to preserve buffs
 - **Configurable** - Customize all settings through the in-game mod config menu
 
 ## Installation
@@ -58,20 +56,7 @@ Edit `config.json` in the mod folder:
 1. **Hold any edible item** in your hands
 2. **Right-click** to instantly consume it
    - If `RequireModifier` is enabled, hold the modifier key while right-clicking
-   - **Important**: Buffed consumables (like Coffee, Lucky Lunch, Spicy Eel, etc.) will show "Buffed consumables can't be consumed quickly" and require normal consumption to preserve their buff effects
-3. **See the results** - Energy/health restored instantly, floating messages show gains
-
-### Compatible Items
-
-- **Regular consumables**: Fruits, vegetables, foraged items, basic food
-- **Any edible item** with positive edibility value that doesn't provide stat buffs
-- **Examples**: Parsnips, Berries, Fish, Milk, Basic Meals
-
-### Non-Compatible Items (Use Normal Consumption)
-
-- **Buffed consumables**: Items that provide temporary stat bonuses
-- **Examples**: Coffee (+Speed), Lucky Lunch (+Luck), Spicy Eel (+Luck +Speed), Pumpkin Soup (+Defense +Luck)
-- **Reason**: These items require the game's normal consumption process to properly apply their complex buff effects, duration timers, and stacking rules. Instant consumption would bypass this system and could cause buffs to malfunction or not apply at all.
+3. **See the results** - Energy/health restored instantly, floating messages show gains, and any buffs are applied
 
 ## Technical Details
 

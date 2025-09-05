@@ -74,24 +74,6 @@ namespace QuickConsume
 			int staminaGain = obj.staminaRecoveredOnConsumption();
 			int healthGain = obj.healthRecoveredOnConsumption();
 
-			// Check if this food has buffs - if so, don't allow quick consumption
-			if (HasBuffs(obj))
-			{
-				// Show message that buffed consumables can't be consumed quickly
-				var hudMessage = new HUDMessage(null)
-				{
-					message = "Buffed consumables can't be consumed quickly",
-					timeLeft = HUDMessage.defaultTime,
-					messageSubject = obj
-				};
-				Game1.addHUDMessage(hudMessage);
-
-				// Don't suppress the button - let the game handle it normally
-				return;
-			}
-
-			// Apply instant eating effects for non-buff foods
-
 			// Store current values to calculate actual restoration for display
 			int previousStamina = (int)who.Stamina;
 			int previousHealth = who.health;
@@ -99,6 +81,9 @@ namespace QuickConsume
 			// Apply energy/health restoration
 			who.Stamina = System.Math.Min(who.MaxStamina, who.Stamina + staminaGain);
 			who.health = System.Math.Min(who.maxHealth, who.health + healthGain);
+
+			// Apply buffs using the game's native buff system (if any)
+			ApplyBuffsFromItem(obj, who);
 
 			// Calculate actual restoration amounts for display
 			int actualStaminaGain = (int)who.Stamina - previousStamina;
@@ -148,48 +133,35 @@ namespace QuickConsume
 			Helper.Input.Suppress(e.Button);
 		}
 
-		private bool HasBuffs(SObject obj)
+		/// <summary>
+		/// Apply buffs from an item using the game's native buff system.
+		/// This ensures buffs are applied exactly as the game would apply them,
+		/// preventing stacking issues and preserving all buff mechanics.
+		/// </summary>
+		/// <param name="obj">The consumable object</param>
+		/// <param name="who">The player consuming the item</param>
+		private void ApplyBuffsFromItem(SObject obj, Farmer who)
 		{
 			try
 			{
-				// Primary method: Check the object's buff data
-				if (Game1.objectData.TryGetValue(obj.ItemId, out var objectData))
+				// Use the game's native GetFoodOrDrinkBuffs method to get exactly the same buffs
+				// that would be applied if the item was consumed normally
+				var buffs = obj.GetFoodOrDrinkBuffs();
+
+				foreach (var buff in buffs)
 				{
-					// If the item has any buff definitions, it has buffs
-					if (objectData.Buffs != null && objectData.Buffs.Count > 0)
+					if (buff != null)
 					{
-						// Simply check if any buff entries exist - they wouldn't be there unless they do something
-						return true;
+						// Apply the buff using the same method the game uses
+						// This ensures proper buff ID handling, stacking rules, and duration management
+						who.applyBuff(buff);
 					}
 				}
-
-				// If we reach here, the item has no buff data in the game's native system
-				// This likely means it's safe for quick consumption
-
-				// Check if the item's category or type suggests it might have buffs
-				// Most buff foods are in the "Cooking" category (-7) or specific artisan goods
-				if (obj.Category == SObject.CookingCategory)
-				{
-					// Cooked foods might have buffs but we couldn't detect them through the normal system
-					// This could be a vanilla item we missed or a modded item with custom buff logic
-					Monitor.Log($"Cooked food '{obj.Name}' has no detectable buff data - using normal consumption for safety", LogLevel.Warn);
-					return true;
-				}
-
-				// For all other categories (fruits, vegetables, foraged items, etc.)
-				// these are usually safe for quick consumption
-				Monitor.Log($"Food '{obj.Name}' appears safe for quick consumption (no buffs detected)", LogLevel.Trace);
-				return false;
 			}
 			catch (Exception ex)
 			{
-				Monitor.Log($"Error checking buffs for {obj.Name}: {ex.Message}", LogLevel.Warn);
-
-				// If we can't determine buff status, err on the side of caution
-				// and use normal consumption to avoid breaking buff mechanics
-				return true;
+				Monitor.Log($"Error applying buffs from {obj.DisplayName}: {ex.Message}", LogLevel.Warn);
 			}
 		}
 	}
-
 }
